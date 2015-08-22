@@ -1,19 +1,37 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/spf13/viper"
 )
+
+func init() {
+	http.HandleFunc("/hostname", handleHostname)
+	handle("hostname", func(hostname string) {
+		SetHostname([]byte(hostname))
+	})
+}
+
+func SetHostname(hostname []byte) error {
+	fmt.Println("Setting hostname")
+	err := ioutil.WriteFile("/proc/sys/kernel/hostname", hostname, 0644)
+	return err
+}
 
 func handleHostname(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Add("Content-Type", "application/json")
 	if r.Method == "POST" {
 		body, _ := ioutil.ReadAll(r.Body)
-		err := ioutil.WriteFile("/proc/sys/kernel/hostname", body, 0644)
+		err := SetHostname(body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		viper.Set("hostname", string(body))
+		saveConfig()
 	} else {
 		hostnameBytes, err := ioutil.ReadFile("/proc/sys/kernel/hostname")
 		if err != nil {
