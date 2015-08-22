@@ -10,8 +10,11 @@ import (
 
 func init() {
 	http.HandleFunc("/hostname", handleHostname)
-	handle("hostname", func(hostname string) {
-		SetHostname([]byte(hostname))
+	inits = append(inits, func() {
+		hostname := viper.GetString("hostname")
+		if hostname != "" {
+			SetHostname([]byte(hostname))
+		}
 	})
 }
 

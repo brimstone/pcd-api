@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var initializers map[string]func(string)
+var inits []func()
 
 func readKernelConfig() {
 	cmdline, err := ioutil.ReadFile("/proc/cmdline")
@@ -49,18 +49,9 @@ func saveConfig() {
 
 }
 
-func handle(key string, callback func(string)) {
-	if initializers == nil {
-		initializers = make(map[string]func(string))
-	}
-	initializers[key] = callback
-}
-
 func runHandlers() {
-	for _, key := range viper.AllKeys() {
-		if initializers[key] != nil {
-			initializers[key](viper.GetString(key))
-		}
+	for init := range inits {
+		inits[init]()
 	}
 }
 
