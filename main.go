@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -32,12 +33,19 @@ func readKernelConfig() {
 }
 
 func saveConfig() {
+	cmd := exec.Command("mount", "LABEL=BOOT", "/boot")
+	err := cmd.Run()
+	if err != nil {
+		return
+	}
 	b, _ := json.MarshalIndent(viper.AllSettings(), "", "  ")
-	err := ioutil.WriteFile(viper.GetString("file"), b, 0644)
+	err = ioutil.WriteFile(viper.GetString("file"), b, 0644)
 	if err != nil {
 		panic(fmt.Sprint("Error opening file:", err.Error()))
 	}
 	fmt.Println("Config saved.")
+	cmd = exec.Command("umount", "/boot")
+	cmd.Run()
 
 }
 
@@ -57,15 +65,23 @@ func runHandlers() {
 }
 
 func main() {
-	viper.SetDefault("file", "/tmp/config.json")
+	viper.SetDefault("file", "/boot/config.json")
 	readKernelConfig()
 	viper.SetConfigFile(viper.GetString("file"))
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Println("Error reading config file: ", err.Error())
+	cmd := exec.Command("mount", "LABEL=BOOT", "/boot")
+	err := cmd.Run()
+	if err == nil {
+		err = viper.ReadInConfig()
+		cmd = exec.Command("umount", "/boot")
+		cmd.Run()
+		if err != nil {
+			fmt.Println("Error reading config file: ", err.Error())
+		}
+		saveConfig()
+	} else {
+		fmt.Println(err.Error())
 	}
 	runHandlers()
-	saveConfig()
 
 	fmt.Println("Starting http server on :8080")
 	http.ListenAndServe("127.0.0.1:8080", nil)
