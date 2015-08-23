@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	http.HandleFunc("/hostname", handleHostname)
+	http.HandleFunc(API_VERSION+"/hostname", handleHostname)
 	inits = append(inits, func() {
 		hostname := viper.GetString("hostname")
 		if hostname != "" {

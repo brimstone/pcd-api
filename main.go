@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var API_VERSION = "/1"
+
 var inits []func()
 
 func readKernelConfig() {
