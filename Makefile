@@ -1,5 +1,6 @@
 ifndef GOPATH
-	GOPATH := gopath
+	GOPATH := ${PWD}/gopath
+	export GOPATH
 endif
 
 pcd-api: *.go ${GOPATH}/src/github.com/spf13/viper
