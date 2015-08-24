@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/spf13/viper"
 )
+
+var restartTimer *time.Timer
 
 func init() {
 	http.HandleFunc(API_VERSION+"/docker/bip", handleDockerBip)
@@ -19,8 +22,11 @@ func init() {
 }
 
 func RestartDocker() {
-	cmd := exec.Command("sv", "restart", "/service/docker")
-	cmd.Run()
+	restartTimer.Stop()
+	restartTimer = time.AfterFunc(time.Second, func() {
+		cmd := exec.Command("sv", "restart", "/service/docker")
+		cmd.Run()
+	})
 }
 
 func WriteDockerConfig() {
