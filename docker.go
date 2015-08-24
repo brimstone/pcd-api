@@ -22,7 +22,9 @@ func init() {
 }
 
 func RestartDocker() {
-	restartTimer.Stop()
+	if restartTimer != nil {
+		restartTimer.Stop()
+	}
 	restartTimer = time.AfterFunc(time.Second, func() {
 		cmd := exec.Command("sv", "restart", "/service/docker")
 		cmd.Run()
